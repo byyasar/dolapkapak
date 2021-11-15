@@ -1,80 +1,119 @@
 #include <Arduino.h>
 #include <Servo.h>
 
-Servo myservo;
-int trigpin = 9;
-int echopin = 8;
+//------------Pinler ------------------//
+int trigpin = 6;
+int echopin = 5;
 int sayac = 0;
-int redDeger, greenDeger, blueDeger = 0;
+int servoPin = 7;
 int redPin = 2;
 int greenPin = 3;
 int bluePin = 4;
-
+int butonPin = 8;
+int buzzerPin = 9;
+// ------------------------------------//
+// ------------ Notalar  --------------//
+int C = 262; // do                   
+int D = 294; // re                  
+int E = 330; // mi                  
+int F = 349; // fa                   
+int G = 392; // sol                 
+int A = 440; // la                   
+int B = 494; // si                   
+int Cc = 523; // do (ince)    
+// ------------------------------------//
+// ------------ Değişkenler -----------//
 bool kapakDurum = false;
+bool butonDurum = false;
 unsigned long eskiZaman = 0;
 unsigned long yeniZaman;
 long uzaklik = 0;
 int maxKapak = 120;
+Servo myservo;
+// ------------------------------------//
 
-void kapagiAc()
+//-------------Fonksiyonlar--------------//
+void sesCal(int durum)
 {
-  for (int i = 0; i <= maxKapak; i++)
+  switch (durum)
   {
-    myservo.write(i);
+  case 1:
+    tone(buzzerPin,C); 
+    delay(20); 
+    noTone(buzzerPin); 
+    delay(10);   
+    break;
+  case 2:
+   tone(buzzerPin,D); 
+    delay(30); 
+    noTone(buzzerPin); 
     delay(10);
-  }
-}
-
-void kapagiKapat()
-{
-  for (int i = maxKapak; i >= 0; i--)
-  {
-    myservo.write(i);
-    delay(10);
+    break;
   }
 }
 void ledYak(int durum)
 {
   switch (durum)
   {
-  case 1:
-    digitalWrite(redPin, 0);
-    digitalWrite(greenPin, 255);
-    digitalWrite(bluePin, 255);
-    break;
-  case 2:
+  case 1: //kırmızı yak
     digitalWrite(redPin, 255);
     digitalWrite(greenPin, 0);
-    digitalWrite(bluePin, 255);
+    digitalWrite(bluePin, 0);
     break;
-  case 3:
-    digitalWrite(redPin, 255);
+  case 2: //yeşil yak
+    digitalWrite(redPin, 0);
     digitalWrite(greenPin, 255);
     digitalWrite(bluePin, 0);
     break;
-  default:
+  case 3: //mavi yak
+    digitalWrite(redPin, 0);
+    digitalWrite(greenPin, 0);
+    digitalWrite(bluePin, 255);
     break;
   }
 }
+void kapagiAc()
+{
+  sesCal(2);
+  ledYak(3);
+  kapakDurum = true;
+  for (int i = 0; i <= maxKapak; i++)
+  {
+    myservo.write(i);
+    delay(10);
+  }
+}
+void kapagiKapat()
+{
+  sesCal(2);
+  kapakDurum = false;
+  ledYak(1);
+  for (int i = maxKapak; i >= 0; i--)
+  {
+    myservo.write(i);
+    delay(10);
+  }
+}
 
+
+//-------------------------------------------//
 void setup()
 {
-  // put your setup code here, to run once:
+  pinMode(redPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
   pinMode(trigpin, OUTPUT);
   pinMode(echopin, INPUT);
-  myservo.attach(7);
+  pinMode(butonPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  myservo.attach(servoPin);
   Serial.begin(9600);
-  myservo.write(0); //kapak kapansın
-  //RGB port ayarları
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
+  myservo.write(0); //açılışta kapak kapansın
   ledYak(1);
 }
 void loop()
 {
   yeniZaman = millis();
-
   digitalWrite(trigpin, LOW);
   delayMicroseconds(5);
   digitalWrite(trigpin, HIGH);
@@ -82,37 +121,44 @@ void loop()
   long sure = pulseIn(echopin, HIGH);
   uzaklik = sure / 29.1 / 2;
 
-  if (yeniZaman - eskiZaman > 1000)
+  if (yeniZaman - eskiZaman > 500)
   {
-    Serial.print("uzaklık :");
-    Serial.println(uzaklik);
+    if (digitalRead(butonPin) == HIGH)
+    {
+      if (kapakDurum)
+      {
+       // kapagiKapat();
+      }
+      else
+      {
+        //kapagiAc();
+      }
+      Serial.println("Butona basıldı");
+    }
+    
 
-    if (uzaklik < 20 && uzaklik > 0)
+    if (uzaklik <= 25 && uzaklik > 0)
     {
       sayac++;
       ledYak(2);
+      sesCal(1);
+      if (sayac == 3 && kapakDurum == false)
+      {
+        kapagiAc();
+        sayac = 0;
+      }
+      else if (sayac == 3 && kapakDurum == true)
+      {
+        kapagiKapat();
+      }
     }
     else
     {
       sayac = 0;
       ledYak(1);
     }
-
-    if (sayac == 3 && kapakDurum == false)
-    {
-      //myservo.write(90); //kapak açılsın
-      kapagiAc();
-      ledYak(3);
-      sayac = 0;
-      kapakDurum = true;
-    }
-    else if (sayac == 3 && kapakDurum == true)
-    {
-      //myservo.write(0);//kapak kapansın
-      kapagiKapat();
-      ledYak(1);
-      kapakDurum = false;
-    }
+    Serial.print("uzaklık :");
+    Serial.println(uzaklik);
     Serial.print("sayac : ");
     Serial.println(sayac);
     Serial.print("kapakDurum :");
