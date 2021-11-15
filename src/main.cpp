@@ -9,7 +9,7 @@ int servoPin = 7;
 int redPin = 2;
 int greenPin = 3;
 int bluePin = 4;
-int butonPin = 8;
+//int butonPin = 8;
 int buzzerPin = 9;
 // ------------------------------------//
 // ------------ Notalar  --------------//
@@ -24,7 +24,7 @@ int Cc = 523; // do (ince)
 // ------------------------------------//
 // ------------ Değişkenler -----------//
 bool kapakDurum = false;
-bool butonDurum = false;
+//bool butonDurum = false;
 unsigned long eskiZaman = 0;
 unsigned long yeniZaman;
 long uzaklik = 0;
@@ -104,7 +104,7 @@ void setup()
   pinMode(greenPin, OUTPUT);
   pinMode(trigpin, OUTPUT);
   pinMode(echopin, INPUT);
-  pinMode(butonPin, INPUT);
+  //pinMode(butonPin, INPUT);
   pinMode(buzzerPin, OUTPUT);
   myservo.attach(servoPin);
   Serial.begin(9600);
@@ -123,7 +123,7 @@ void loop()
 
   if (yeniZaman - eskiZaman > 500)
   {
-    if (digitalRead(butonPin) == HIGH)
+    /*if (digitalRead(butonPin) == HIGH)
     {
       if (kapakDurum)
       {
@@ -134,7 +134,7 @@ void loop()
         //kapagiAc();
       }
       Serial.println("Butona basıldı");
-    }
+    }*/
     
 
     if (uzaklik <= 25 && uzaklik > 0)
